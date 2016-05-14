@@ -1,0 +1,50 @@
+import http.requests.*;
+import processing.serial.*;
+
+Serial myPort;  // Create object from Serial class
+String val="";      // Data received from the serial port
+
+String ACCOUNT_SID = "insert id ";
+String AUTH_TOKEN = "insert token";
+PostRequest post = new PostRequest("https://api.twilio.com/2010-04-01/Accounts/" 
+  + ACCOUNT_SID + "/Messages");
+
+void setup() {
+  size(200, 200);
+  // I know that the first port in the serial list on my mac
+  // is always my  FTDI adaptor, so I open Serial.list()[0].
+  // On Windows machines, this generally opens COM1.
+  // Open whatever port is the one you're using.
+  String portName = Serial.list()[2];
+  println(Serial.list());
+  myPort = new Serial(this, portName, 9600);
+}
+
+void draw() {
+  if ( myPort.available() > 0) {  // If data is available,
+    String inval = myPort.readStringUntil('\n');         // read it and store it in val
+    if(inval != null ) val = trim(inval);
+    println(val + "|");
+  }
+  background(255);             // Set background to white
+  if (val.length() > 0 && val.equals("PARSONS PARIS TESTING")) {              // If the serial value is 0,
+    println("MATCH");
+    fill(0);
+    sendText();
+    val = "";
+    // set fill to black
+  } else {                       // If the serial value is not 0,
+    fill(204);                 // set fill to light gray
+  }
+  rect(50, 50, 100, 100);
+}
+
+void sendText() {
+  post.addData("From", "+insert twilio number");
+  post.addData("To", "+insert desired number");
+   post.addData("Body", "Welcome to La Fondation Lafayette. Anna Rubak is a photographer and new media artist based in NY and London. To learn more about Anna Ruback's work and process please load our website http://lafayetteanticipation.squarespace.com/");
+  //post.addData("Body", "Welcome to La Fondation Lafayette. To further enhance your visit please load our website http://lafayetteanticipation.squarespace.com/");
+  post.addUser(ACCOUNT_SID, AUTH_TOKEN);
+  post.send();
+  println("Reponse Content: " + post.getContent());
+}
